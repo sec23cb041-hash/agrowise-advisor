@@ -1,3 +1,23 @@
+# ML model files (too large for GitHub — regenerate with train scripts)
+ml_service/models/*.h5
+ml_service/models/*.pkl
+
+# Datasets (large image files)
+datasets/crop_disease/*
+datasets/soil_images/*
+datasets/bad_images/*
+datasets/bad_soil_images/*
+!datasets/crop_disease/.gitkeep
+!datasets/soil_images/.gitkeep
+!datasets/bad_images/.gitkeep
+!datasets/bad_soil_images/.gitkeep
+
+# Dependencies
+node_modules/
+
+# Misc
+py
+
 # Logs
 logs
 *.log
@@ -7,7 +27,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment files
+.env
+.env.*
+backend/backend/.env
+!.env.example
+!backend/.env.example
+!ml_service/.env.example
 dist
 dist-ssr
 *.local

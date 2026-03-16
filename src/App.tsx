@@ -13,6 +13,9 @@ import WeatherPage from "./pages/WeatherPage";
 import MarketPage from "./pages/MarketPage";
 import AlertsPage from "./pages/AlertsPage";
 import ProfilePage from "./pages/ProfilePage";
+import CropRecommendationPage from "./pages/CropRecommendationPage";
+import DatasetInsightsPage from "./pages/DatasetInsightsPage";
+import SmartFarmDashboard from "./pages/SmartFarmDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +43,9 @@ function AppRoutes() {
         <Route path="/market" element={<MarketPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/crop-recommend" element={<CropRecommendationPage />} />
+        <Route path="/dataset-insights" element={<DatasetInsightsPage />} />
+        <Route path="/smart-farm" element={<SmartFarmDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>

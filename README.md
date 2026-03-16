@@ -62,7 +62,34 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Frontend → Vercel
+
+1. Push this repo to GitHub
+2. Import the repo at [vercel.com](https://vercel.com)
+3. Set these environment variables in Vercel dashboard:
+   - `VITE_API_BASE_URL` → your Railway backend URL (e.g. `https://your-app.railway.app`)
+   - `VITE_ML_BASE_URL` → your Render ML service URL (e.g. `https://your-ml.onrender.com`)
+4. Deploy — Vercel auto-detects Vite
+
+### Backend (Node.js) → Railway
+
+1. Create a new project at [railway.app](https://railway.app)
+2. Connect your GitHub repo, set root directory to `backend/`
+3. Add environment variables from `backend/.env.example`
+4. Railway uses `railway.toml` — start command is `node src/server.js`
+
+### ML Service (FastAPI) → Render
+
+1. Create a new Web Service at [render.com](https://render.com)
+2. Connect your GitHub repo, set root directory to `ml_service/`
+3. Add environment variables from `ml_service/.env.example`
+4. Render uses `render.yaml` — start command is `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+> Note: ML models (`.pkl`, `.h5`) are excluded from git. Run the train scripts after deployment:
+> ```bash
+> python train_crop_model.py
+> python train_weather_model.py
+> ```
 
 ## Can I connect a custom domain to my Lovable project?
 
@@ -71,3 +98,20 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Starting the Platform
+
+```
+npm install
+npm run dev:all
+```
+
+This starts all three services in a single terminal — no PowerShell policy changes needed:
+
+- Frontend (React/Vite) → http://localhost:5173
+- Backend (Node.js)     → http://localhost:3000
+- ML AI Service (FastAPI) → http://localhost:8000
+
+The launcher (`start-dev.js`) uses Node's `child_process.spawn` directly, bypassing PowerShell entirely. It also auto-trains the weather model if `rainfall_model.pkl` is missing.
+
+Press `Ctrl+C` to stop all services.
