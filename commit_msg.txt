@@ -1,0 +1,1 @@
+Fix backend: add health endpoint, bind 0.0.0.0, hardcode IP fallback in API

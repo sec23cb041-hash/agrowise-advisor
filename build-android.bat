@@ -4,76 +4,48 @@ echo  Agrowise Advisor - Android Build Script
 echo ============================================
 echo.
 
-REM STEP 1 - Verify project root
 if not exist package.json (
-    echo [ERROR] package.json not found.
-    echo Make sure you are inside the agrowise-advisor/ project folder.
-    pause
-    exit /b 1
+    echo [ERROR] Run this from the agrowise-advisor project root.
+    pause & exit /b 1
 )
-echo [OK] Project root verified.
 
-REM STEP 2 - Install Node dependencies
-echo.
-echo [STEP 2] Installing Node dependencies...
+echo [STEP 1] Installing Node dependencies...
 call npm install
-if %ERRORLEVEL% neq 0 (
-    echo [ERROR] npm install failed.
-    pause
-    exit /b 1
-)
-echo [OK] Dependencies installed.
+if %ERRORLEVEL% neq 0 (echo [ERROR] npm install failed. & pause & exit /b 1)
 
-REM STEP 3 - Build the frontend
-echo.
-echo [STEP 3] Building React frontend...
+echo [STEP 2] Building React frontend...
 call npm run build
-if %ERRORLEVEL% neq 0 (
-    echo [ERROR] npm run build failed.
-    pause
-    exit /b 1
-)
-if not exist dist\index.html (
-    echo [ERROR] Build output not found in dist/
-    pause
-    exit /b 1
-)
-echo [OK] Frontend built successfully (dist/).
+if %ERRORLEVEL% neq 0 (echo [ERROR] Build failed. & pause & exit /b 1)
+if not exist dist\index.html (echo [ERROR] dist/ not found. & pause & exit /b 1)
+echo [OK] Frontend built.
 
-REM STEP 4 - Sync Capacitor
-echo.
-echo [STEP 4] Syncing Capacitor Android project...
+echo [STEP 3] Syncing Capacitor...
 call npx cap sync android
-if %ERRORLEVEL% neq 0 (
-    echo [ERROR] cap sync failed.
-    pause
-    exit /b 1
-)
+if %ERRORLEVEL% neq 0 (echo [ERROR] cap sync failed. & pause & exit /b 1)
 echo [OK] Capacitor synced.
 
-REM STEP 5 - Check Android Studio
-echo.
-echo [STEP 5] Checking for Android Studio...
-if not exist "C:\Program Files\Android\Android Studio\bin\studio64.exe" (
-    echo [ERROR] Android Studio not found.
-    echo.
-    echo Please install Android Studio from:
-    echo   https://developer.android.com/studio
-    echo.
-    echo Then run setup_android_env.bat as Administrator.
-    echo Then re-run this script.
-    pause
-    exit /b 1
+echo [STEP 4] Opening Android Studio...
+
+REM Detect Android Studio
+set "STUDIO_PATH="
+if exist "C:\Program Files\Android\Android Studio\bin\studio64.exe" (
+    set "STUDIO_PATH=C:\Program Files\Android\Android Studio\bin\studio64.exe"
 )
-echo [OK] Android Studio found.
+if exist "%LOCALAPPDATA%\Programs\Android Studio\bin\studio64.exe" (
+    set "STUDIO_PATH=%LOCALAPPDATA%\Programs\Android Studio\bin\studio64.exe"
+)
 
-REM STEP 6 - Open Android Studio
-echo.
-echo [STEP 6] Opening Android Studio...
-echo   - Wait for Gradle sync to complete (first run may take several minutes)
-echo   - Then go to: Build ^> Build APK
-echo   - APK location: android\app\build\outputs\apk\debug\app-debug.apk
-echo.
-call npx cap open android
+if "%STUDIO_PATH%"=="" (
+    echo [ERROR] Android Studio not found. Install from https://developer.android.com/studio
+    pause & exit /b 1
+)
 
+start "" "%STUDIO_PATH%" "%~dp0android"
+
+echo.
+echo [OK] Android Studio is opening the project...
+echo.
+echo NEXT: Wait for Gradle sync, then go to Build ^> Build APK
+echo APK:  android\app\build\outputs\apk\debug\app-debug.apk
+echo.
 pause
