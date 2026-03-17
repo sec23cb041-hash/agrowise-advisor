@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ArrowLeft, Camera, Upload, Bug, Loader2, AlertTriangle, CheckCircle, Shield, Leaf } from "lucide-react";
+import { ArrowLeft, Camera, Upload, Bug, Loader2, AlertTriangle, CheckCircle, Shield, Leaf, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { predictCropDisease, type DiseaseResult } from "@/lib/api";
 import { compressImage } from "@/lib/imageUtils";
+import { downloadDiseaseReport } from "@/lib/reportGenerator";
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
@@ -30,6 +31,7 @@ export default function PestPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<DiseaseResult | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +60,16 @@ export default function PestPage() {
       setError(err instanceof Error ? err.message : "Detection failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!result) return;
+    setDownloading(true);
+    try {
+      await downloadDiseaseReport(result, preview ?? undefined);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -226,6 +238,18 @@ export default function PestPage() {
                 </ul>
               </CardContent>
             </Card>
+
+            {/* Download Report */}
+            <Button
+              variant="hero"
+              onClick={handleDownloadReport}
+              disabled={downloading}
+              className="w-full"
+            >
+              {downloading
+                ? <><Loader2 className="h-5 w-5 animate-spin" /> Generating PDF...</>
+                : <><Download className="h-5 w-5" /> Download Report</>}
+            </Button>
           </motion.div>
         )}
       </div>

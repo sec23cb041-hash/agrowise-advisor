@@ -1,0 +1,209 @@
+import jsPDF from "jspdf";
+import type { SoilResult, DiseaseResult } from "./api";
+
+const PRIMARY = [34, 139, 34] as const;   // forest green
+const DARK    = [30, 30, 30] as const;
+const GRAY    = [100, 100, 100] as const;
+const LIGHT   = [245, 245, 245] as const;
+
+function header(doc: jsPDF, title: string) {
+  // Green banner
+  doc.setFillColor(...PRIMARY);
+  doc.rect(0, 0, 210, 28, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("🌱 Agrowise Smart Agriculture", 14, 12);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(title, 14, 21);
+  // Date
+  doc.text(new Date().toLocaleString(), 196, 21, { align: "right" });
+  doc.setTextColor(...DARK);
+}
+
+function sectionTitle(doc: jsPDF, text: string, y: number): number {
+  doc.setFillColor(...LIGHT);
+  doc.rect(10, y, 190, 8, "F");
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...PRIMARY);
+  doc.text(text, 14, y + 5.5);
+  doc.setTextColor(...DARK);
+  return y + 12;
+}
+
+function row(doc: jsPDF, label: string, value: string, y: number, shade: boolean): number {
+  if (shade) { doc.setFillColor(250, 250, 250); doc.rect(10, y, 190, 7, "F"); }
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...GRAY);
+  doc.text(label, 14, y + 5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...DARK);
+  doc.text(value, 80, y + 5);
+  return y + 7;
+}
+
+function bulletList(doc: jsPDF, items: string[], y: number): number {
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...DARK);
+  for (const item of items) {
+    const lines = doc.splitTextToSize(`• ${item}`, 178);
+    doc.text(lines, 16, y);
+    y += lines.length * 5;
+  }
+  return y + 2;
+}
+
+function addImage(doc: jsPDF, dataUrl: string, y: number): number {
+  try {
+    doc.addImage(dataUrl, "JPEG", 14, y, 50, 40);
+    return y + 44;
+  } catch {
+    return y;
+  }
+}
+
+// ── Soil Report ───────────────────────────────────────────────────────────────
+
+export async function downloadSoilReport(result: SoilResult, imageDataUrl?: string) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  header(doc, "Soil Analysis Report");
+
+  let y = 34;
+
+  // Image
+  if (imageDataUrl) {
+    y = addImage(doc, imageDataUrl, y);
+    y += 2;
+  }
+
+  // Classification
+  y = sectionTitle(doc, "Soil Classification", y);
+  y = row(doc, "Soil Type",        result.soil_type,                          y, false);
+  y = row(doc, "Confidence",       `${Math.round(result.confidence * 100)}%`, y, true);
+  y = row(doc, "Certainty Level",  result.certainty,                          y, false);
+  y += 4;
+
+  // Soil parameters
+  if (result.soil_parameters) {
+    y = sectionTitle(doc, "AI Estimated Soil Parameters", y);
+    y = row(doc, "Nitrogen (N)",   `${result.soil_parameters.nitrogen} kg/ha`,  y, false);
+    y = row(doc, "Phosphorus (P)", `${result.soil_parameters.phosphorus} kg/ha`, y, true);
+    y = row(doc, "Potassium (K)",  `${result.soil_parameters.potassium} kg/ha`,  y, false);
+    y = row(doc, "pH",             String(result.soil_parameters.ph),            y, true);
+    y += 4;
+  }
+
+  // Properties
+  y = sectionTitle(doc, "Soil Properties", y);
+  y = row(doc, "Drainage",        result.properties.drainage,        y, false);
+  y = row(doc, "Fertility",       result.properties.fertility,       y, true);
+  y = row(doc, "Water Retention", result.properties.water_retention, y, false);
+  y = row(doc, "Texture",         result.properties.texture,         y, true);
+  y = row(doc, "pH Range",        result.properties.ph_range,        y, false);
+  y += 4;
+
+  // Environment
+  if (result.environment) {
+    y = sectionTitle(doc, "Environment Conditions", y);
+    y = row(doc, "Temperature", `${result.environment.temperature}°C`, y, false);
+    y = row(doc, "Humidity",    `${result.environment.humidity}%`,     y, true);
+    y = row(doc, "Moisture",    `${result.environment.moisture}%`,     y, false);
+    y = row(doc, "Rainfall",    `${result.environment.rainfall} mm`,   y, true);
+    y += 4;
+  }
+
+  // Recommendations
+  y = sectionTitle(doc, "Recommended Crops", y);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(result.recommendations.crops.join(", "), 14, y);
+  y += 8;
+
+  y = sectionTitle(doc, "Fertilizer Recommendation", y);
+  const fertLines = doc.splitTextToSize(result.recommendations.fertilizer, 182);
+  doc.setFontSize(9);
+  doc.text(fertLines, 14, y);
+  y += fertLines.length * 5 + 4;
+
+  y = sectionTitle(doc, "Irrigation Advice", y);
+  const irrLines = doc.splitTextToSize(result.recommendations.irrigation, 182);
+  doc.setFontSize(9);
+  doc.text(irrLines, 14, y);
+  y += irrLines.length * 5 + 4;
+
+  if (result.recommendations.improvement_tips.length > 0) {
+    y = sectionTitle(doc, "Improvement Tips", y);
+    y = bulletList(doc, result.recommendations.improvement_tips, y);
+  }
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text("Generated by Agrowise Advisor — AI-powered smart agriculture platform", 105, 290, { align: "center" });
+
+  doc.save(`soil-analysis-${Date.now()}.pdf`);
+}
+
+// ── Disease/Pest Report ───────────────────────────────────────────────────────
+
+export async function downloadDiseaseReport(result: DiseaseResult, imageDataUrl?: string) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  header(doc, "Pest & Disease Detection Report");
+
+  let y = 34;
+
+  if (imageDataUrl) {
+    y = addImage(doc, imageDataUrl, y);
+    y += 2;
+  }
+
+  // Detection result
+  y = sectionTitle(doc, "Detection Result", y);
+  y = row(doc, "Detected",        result.disease,                            y, false);
+  y = row(doc, "Confidence",      `${Math.round(result.confidence * 100)}%`, y, true);
+  y = row(doc, "Certainty Level", result.certainty,                          y, false);
+  y += 2;
+  const descLines = doc.splitTextToSize(result.description, 182);
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  doc.text(descLines, 14, y);
+  y += descLines.length * 5 + 4;
+
+  // Symptoms
+  if (result.symptoms.length > 0) {
+    y = sectionTitle(doc, "Symptoms", y);
+    y = bulletList(doc, result.symptoms, y);
+  }
+
+  // Causes
+  if (result.causes.length > 0) {
+    y = sectionTitle(doc, "Causes", y);
+    y = bulletList(doc, result.causes, y);
+  }
+
+  // Treatment
+  if (result.treatment.organic.length > 0) {
+    y = sectionTitle(doc, "Organic Treatment", y);
+    y = bulletList(doc, result.treatment.organic, y);
+  }
+  if (result.treatment.chemical.length > 0) {
+    y = sectionTitle(doc, "Chemical Treatment", y);
+    y = bulletList(doc, result.treatment.chemical, y);
+  }
+
+  // Prevention
+  if (result.prevention.length > 0) {
+    y = sectionTitle(doc, "Prevention Tips", y);
+    y = bulletList(doc, result.prevention, y);
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY);
+  doc.text("Generated by Agrowise Advisor — AI-powered smart agriculture platform", 105, 290, { align: "center" });
+
+  doc.save(`pest-detection-${Date.now()}.pdf`);
+}

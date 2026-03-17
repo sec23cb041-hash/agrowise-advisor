@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft, FlaskConical, Upload, Loader2, AlertTriangle, CheckCircle,
-  Leaf, Droplets, Sprout, Thermometer, CloudRain, FlaskRound, Beaker,
+  Leaf, Droplets, Sprout, Thermometer, CloudRain, FlaskRound, Beaker, Download,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { predictSoilType, type SoilResult } from "@/lib/api";
 import { compressImage } from "@/lib/imageUtils";
+import { downloadSoilReport } from "@/lib/reportGenerator";
 
 function ConfidenceBar({ value }: { value: number }) {
   const pct = Math.round(value * 100);
@@ -34,6 +35,7 @@ export default function SoilPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SoilResult | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Grab GPS coords on mount for weather enrichment
@@ -67,6 +69,16 @@ export default function SoilPage() {
       setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!result) return;
+    setDownloading(true);
+    try {
+      await downloadSoilReport(result, preview ?? undefined);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -291,6 +303,18 @@ export default function SoilPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Download Report */}
+            <Button
+              variant="hero"
+              onClick={handleDownloadReport}
+              disabled={downloading}
+              className="w-full"
+            >
+              {downloading
+                ? <><Loader2 className="h-5 w-5 animate-spin" /> Generating PDF...</>
+                : <><Download className="h-5 w-5" /> Download Report</>}
+            </Button>
           </motion.div>
         )}
       </div>
