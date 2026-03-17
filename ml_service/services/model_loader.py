@@ -77,18 +77,26 @@ def load_models() -> None:
     soil_path = os.path.join(_MODELS_DIR, "soil_classification_model.h5")
 
     if _TF_AVAILABLE:
-        try:
-            _crop_disease_model = tf.keras.models.load_model(crop_path)
-            logger.info("Crop disease model loaded from %s", crop_path)
-        except (OSError, FileNotFoundError) as exc:
-            logger.error("Failed to load crop disease model: %s", exc)
+        if os.path.exists(crop_path):
+            try:
+                _crop_disease_model = tf.keras.models.load_model(crop_path)
+                logger.info("Crop disease model loaded from %s", crop_path)
+            except Exception as exc:
+                logger.warning("Could not load crop disease model: %s", exc)
+                _crop_disease_model = None
+        else:
+            print("[model_loader] crop_disease_model.h5 not found — using demo mode")
             _crop_disease_model = None
 
-        try:
-            _soil_model = tf.keras.models.load_model(soil_path)
-            logger.info("Soil classification model loaded from %s", soil_path)
-        except (OSError, FileNotFoundError) as exc:
-            logger.error("Failed to load soil classification model: %s", exc)
+        if os.path.exists(soil_path):
+            try:
+                _soil_model = tf.keras.models.load_model(soil_path)
+                logger.info("Soil classification model loaded from %s", soil_path)
+            except Exception as exc:
+                logger.warning("Could not load soil model: %s", exc)
+                _soil_model = None
+        else:
+            print("[model_loader] soil_classification_model.h5 not found — using demo mode")
             _soil_model = None
     else:
         _crop_disease_model = None
