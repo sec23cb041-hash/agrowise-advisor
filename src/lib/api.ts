@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://10.65.220.24:3000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 // ── Weather ──────────────────────────────────────────────────────────────────
 
@@ -199,7 +199,7 @@ export async function fetchDatasetStats(): Promise<DatasetStats> {
 
 // ── Weather AI ────────────────────────────────────────────────────────────────
 
-const ML_BASE_URL = import.meta.env.VITE_ML_BASE_URL || "http://10.65.220.24:8000";
+const ML_BASE_URL = import.meta.env.VITE_ML_BASE_URL || "http://localhost:8000";
 
 export interface WeatherAIForecastDay {
   day: string;

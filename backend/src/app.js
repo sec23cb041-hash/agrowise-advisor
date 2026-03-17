@@ -6,6 +6,7 @@ const soilTypeRouter = require('./routes/soilType');
 const weatherRouter = require('./routes/weather');
 const cropRecommendRouter = require('./routes/cropRecommend');
 const marketAlertsRouter = require('./routes/marketAlerts');
+const marketPricesRouter = require('./routes/marketPrices');
 const voiceAdvisoryRouter = require('./routes/voiceAdvisory');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -21,6 +22,7 @@ app.use('/predict-soil-type', soilTypeRouter);
 app.use('/weather', weatherRouter);
 app.use('/recommend-crop', cropRecommendRouter);
 app.use('/market-alerts', marketAlertsRouter);
+app.use('/market-prices', marketPricesRouter);
 app.use('/voice-advisory', voiceAdvisoryRouter);
 
 app.use((req, res) => {
