@@ -1,1 +1,1 @@
-Fix Railway deployment config and add health endpoint
+Update README with correct tech stack: React, Node.js, TensorFlow, FastAPI
