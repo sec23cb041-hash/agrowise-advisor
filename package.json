@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npx --yes vite build",
-    "build:dev": "npx --yes vite build --mode development",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "build:render": "npm install --ignore-scripts && npm install vite @vitejs/plugin-react-swc --save-dev && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
